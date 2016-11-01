@@ -26,7 +26,6 @@ void config_init() {
     persist_write_int(PERSIST_WIND, 0);
     persist_write_int(PERSIST_SUNSET, 1);
     persist_write_int(PERSIST_SUNRISE, 1);
-    persist_write_int(PERSIST_DIGITALTIME, 0);
     persist_write_int(PERSIST_INVERTED, 0);
     persist_write_int(PERSIST_NUMBERS, 1);
     persist_write_int(PERSIST_MINUTES, 0);
@@ -40,6 +39,8 @@ void config_init() {
     persist_write_string(PERSIST_CONDITIONS_ID, "");
     persist_write_string(PERSIST_WEATHER_API, "");
     persist_write_int(PERSIST_SERVICE_PROVIDER, 0);
+    persist_write_int(PERSIST_handsStyle, 0);
+
 
   }
 

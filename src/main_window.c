@@ -26,7 +26,6 @@
 #define WIND 21
 #define SUNSET 22
 #define SUNRISE 23
-#define DIGITALTIME 24
 #define INVERTED 25
 #define NUMBERS 26
 #define CELCIUS 27
@@ -37,8 +36,48 @@
 #define READY 102
 #define KEY_weatherApi 101
 #define KEY_weatherProvider 100
+#define KEY_handsStyle 24
+
+#define PATH_HANDS_INVERSE_LEGTH 15
+#define CONFIG_HAND_LENGTH_MIN 65
+#define CONFIG_HAND_LENGTH_HOUR 45
+#define CONFIG_HAND_LENGTH_MIN 65
 
 #define DEBUG false
+
+
+static const GPathInfo MINUTE_HAND_PATH = {
+  .num_points = 4,
+  .points = (GPoint []) { {-3, PATH_HANDS_INVERSE_LEGTH}, 
+                          {-3, CONFIG_HAND_LENGTH_MIN*-1}, 
+                          {3, CONFIG_HAND_LENGTH_MIN*-1}, 
+                          {3, PATH_HANDS_INVERSE_LEGTH}}
+};
+static const GPathInfo HOUR_HAND_PATH = {
+  .num_points = 4,
+  .points = (GPoint []) {{-3, PATH_HANDS_INVERSE_LEGTH}, 
+                          {-3, CONFIG_HAND_LENGTH_HOUR*-1}, 
+                          {3, CONFIG_HAND_LENGTH_HOUR*-1}, 
+                          {3, PATH_HANDS_INVERSE_LEGTH}}
+};
+
+static const GPathInfo MINUTE_HAND_PATH_BOLD = {
+  .num_points = 4,
+  .points = (GPoint []) {{-4, PATH_HANDS_INVERSE_LEGTH}, 
+                          {-4, CONFIG_HAND_LENGTH_MIN*-1}, 
+                          {4, CONFIG_HAND_LENGTH_MIN*-1}, 
+                          {4, PATH_HANDS_INVERSE_LEGTH}}
+};
+static const GPathInfo HOUR_HAND_PATH_BOLD = {
+  .num_points = 4,
+  .points = (GPoint []) {{-4, PATH_HANDS_INVERSE_LEGTH}, 
+                          {-4, CONFIG_HAND_LENGTH_HOUR*-1}, 
+                          {4, CONFIG_HAND_LENGTH_HOUR*-1}, 
+                          {4, PATH_HANDS_INVERSE_LEGTH}}
+};
+
+static GPath *s_hour_hand_path_ptr = NULL, *s_minute_hand_path_ptr = NULL,*s_hour_hand_path_bold_ptr = NULL, *s_minute_hand_path_bold_ptr = NULL;
+
 
 static GenericWeatherStatus weather_last_status;
 
@@ -426,18 +465,59 @@ static void draw_proc(Layer *layer, GContext *ctx) {
   };
 
 
-  // Draw hands
-  // int y = 0;
-  graphics_context_set_stroke_color(ctx, GColorWhite);
-  for(int y = 0; y < THICKNESS; y++) {
-    for(int x = 0; x < THICKNESS; x++) {
-      graphics_draw_line(ctx, GPoint(center.x + x, center.y + y), GPoint(minute_hand_long.x + x, minute_hand_long.y + y));
-      graphics_draw_line(ctx, GPoint(center.x + x, center.y + y), GPoint(minute_hand_inverse.x + x, minute_hand_inverse.y + y));
-      graphics_draw_line(ctx, GPoint(center.x + x, center.y + y), GPoint(hour_hand_long.x + x, hour_hand_long.y + y));
-      graphics_draw_line(ctx, GPoint(center.x + x, center.y + y), GPoint(hour_hand_inverse.x + x, hour_hand_inverse.y + y));
+  if (DEBUG)
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "HandsStyle: %d",config_get(PERSIST_handsStyle));
+  if (config_get(PERSIST_handsStyle) == 1){
+    if (s_last_time.minutes == 0 ||  s_last_time.minutes == 15 || s_last_time.minutes == 30 || s_last_time.minutes == 45){
+      gpath_move_to(s_minute_hand_path_bold_ptr, GPoint(200, 200));
+      gpath_move_to(s_minute_hand_path_ptr, center);
+      if(s_last_time.minutes == 0){
+        gpath_move_to(s_hour_hand_path_bold_ptr, GPoint(200, 200));
+        gpath_move_to(s_hour_hand_path_ptr, center);
+      }else{
+        gpath_move_to(s_hour_hand_path_bold_ptr, center);
+        gpath_move_to(s_hour_hand_path_ptr, GPoint(200, 200));
+      }
+    }else{
+      gpath_move_to(s_hour_hand_path_bold_ptr, center);
+      gpath_move_to(s_minute_hand_path_bold_ptr, center);
+      gpath_move_to(s_hour_hand_path_ptr, GPoint(200, 200));
+      gpath_move_to(s_minute_hand_path_ptr, GPoint(200, 200));
     }
-  }
+      // Draw Hours Hand
+    gpath_rotate_to(s_hour_hand_path_ptr,hour_angle);
+    gpath_rotate_to(s_minute_hand_path_ptr,minute_angle);
 
+    gpath_rotate_to(s_hour_hand_path_bold_ptr,hour_angle);
+    gpath_rotate_to(s_minute_hand_path_bold_ptr,minute_angle);
+        
+    graphics_context_set_fill_color(ctx, GColorLightGray);
+    gpath_draw_filled(ctx, s_hour_hand_path_ptr);
+    gpath_draw_filled(ctx, s_hour_hand_path_bold_ptr);
+    graphics_context_set_stroke_color(ctx, GColorBlack);    
+    gpath_draw_outline(ctx, s_hour_hand_path_ptr);  
+    gpath_draw_outline(ctx, s_hour_hand_path_bold_ptr);  
+  
+
+    graphics_context_set_fill_color(ctx, GColorWhite);
+    gpath_draw_filled(ctx, s_minute_hand_path_ptr);
+    gpath_draw_filled(ctx, s_minute_hand_path_bold_ptr);
+    graphics_context_set_stroke_color(ctx, GColorBlack);    
+    gpath_draw_outline(ctx, s_minute_hand_path_ptr);  
+    gpath_draw_outline(ctx, s_minute_hand_path_bold_ptr); 
+  }else{
+      // Draw hands
+      // int y = 0;
+      graphics_context_set_stroke_color(ctx, GColorWhite);
+      for(int y = 0; y < THICKNESS; y++) {
+        for(int x = 0; x < THICKNESS; x++) {
+          graphics_draw_line(ctx, GPoint(center.x + x, center.y + y), GPoint(minute_hand_long.x + x, minute_hand_long.y + y));
+          graphics_draw_line(ctx, GPoint(center.x + x, center.y + y), GPoint(minute_hand_inverse.x + x, minute_hand_inverse.y + y));
+          graphics_draw_line(ctx, GPoint(center.x + x, center.y + y), GPoint(hour_hand_long.x + x, hour_hand_long.y + y));
+          graphics_draw_line(ctx, GPoint(center.x + x, center.y + y), GPoint(hour_hand_inverse.x + x, hour_hand_inverse.y + y));
+        }
+      }
+  }
   // Draw seconds hand
   
   #if defined(PBL_COLOR)
@@ -574,6 +654,7 @@ static void window_load(Window *window) {
 
   Layer *window_layer = window_get_root_layer(window);
   GRect bounds = layer_get_bounds(window_layer);
+  GPoint center = grect_center_point(&bounds);
 
   s_bg_layer = layer_create(bounds);
   layer_set_update_proc(s_bg_layer, bg_update_proc);
@@ -781,8 +862,15 @@ layer_add_child(window_get_root_layer(window), text_layer_get_layer(s_m_40_layer
 
   //s_inverter_layer = inverter_layer_create(bounds);
 
-  
-  
+   s_hour_hand_path_bold_ptr = gpath_create(&HOUR_HAND_PATH_BOLD);
+   s_minute_hand_path_bold_ptr = gpath_create(&MINUTE_HAND_PATH_BOLD);
+   s_hour_hand_path_ptr = gpath_create(&HOUR_HAND_PATH);
+   s_minute_hand_path_ptr = gpath_create(&MINUTE_HAND_PATH);
+
+  gpath_move_to(s_hour_hand_path_bold_ptr, center);
+  gpath_move_to(s_minute_hand_path_bold_ptr, center);
+  gpath_move_to(s_hour_hand_path_ptr, center);
+  gpath_move_to(s_minute_hand_path_ptr, center);
 
   //layer_add_child(window_layer,inverter_layer_get_layer(s_inverter_layer));
 }
@@ -822,7 +910,10 @@ static void window_unload(Window *window) {
   text_layer_destroy(s_m_50_layer);
   text_layer_destroy(s_m_55_layer);
  
-
+  gpath_destroy(s_hour_hand_path_ptr);
+  gpath_destroy(s_minute_hand_path_ptr);
+  gpath_destroy(s_hour_hand_path_bold_ptr);
+  gpath_destroy(s_minute_hand_path_bold_ptr);
   text_layer_destroy(s_weather_icon);
 
   generic_weather_deinit();
@@ -892,6 +983,16 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
               generic_weather_set_provider(weatherProvider);
 
       break;
+      case KEY_handsStyle:
+                      APP_LOG(APP_LOG_LEVEL_INFO, "Hands style: %d",(int)t->value->cstring[0]-'0');
+
+              updated_config = true;
+              config_set(PERSIST_handsStyle,(int)t->value->cstring[0]-'0');
+              persist_write_int(PERSIST_handsStyle, (int)t->value->cstring[0]-'0');
+              if (DEBUG)
+              APP_LOG(APP_LOG_LEVEL_INFO, "Hands style: %d",config_get(PERSIST_handsStyle));
+
+      break;
       case KEY_DATE:
               updated_config = true;
               config_set(PERSIST_KEY_DATE,(int)t->value->int32);
@@ -944,11 +1045,7 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
               config_set(PERSIST_SUNRISE, (int)t->value->int32);     
 
       break;   
-      case DIGITALTIME:
-              updated_config = true;
-              config_set(PERSIST_DIGITALTIME, (int)t->value->int32);     
-
-      break;   
+      
       case INVERTED:
               updated_config = true;
               config_set(PERSIST_INVERTED, (int)t->value->int32); 

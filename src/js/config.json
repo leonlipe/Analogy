@@ -56,6 +56,23 @@
       "type": "toggle",
       "messageKey": "KEY_SECOND_HAND",
       "label": "Enable seconds"
+    },
+    {
+      "type": "select",
+      "messageKey": "handsStyle",
+      "defaultValue": "0",
+      "label": "Hands style",
+       "options": [
+        { 
+          "label": "Original", 
+          "value": "0" 
+        },
+        { 
+          "label": "Modern style", 
+          "value": "1" 
+        }
+
+        ]        
     }
     ]
   },

@@ -1,5 +1,5 @@
 {
-  "version": "2.0.0",
+  "version": "2.2.0",
   "author": "RedLeon",
   "private": true,
   "dependencies": {
@@ -78,7 +78,6 @@
       "KEY_DATE": 6,
       "dummy": 0,
       "CELCIUS": 27,
-      "DIGITALTIME": 24,
       "POLLTIME": 28,
       "HUMIDITY": 20,
       "KEY_CONDITIONS_ICON": 31,
@@ -91,7 +90,8 @@
       "WIND": 21,
       "weatherProvider": 100,
       "weatherApi": 101,
-      "READY": 102
+      "READY": 102,
+      "handsStyle": 24
     },
     "enableMultiJS": true,
     "displayName": "Analogy",
